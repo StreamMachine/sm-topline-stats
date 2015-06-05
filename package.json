@@ -1,0 +1,39 @@
+{
+  "name": "sm-topline-stats",
+  "version": "0.1.0",
+  "description": "Generate top-line metrics from StreamMachine Analytics",
+  "main": "index.js",
+  "dependencies": {
+    "elasticsearch": "^3.1.1",
+    "yargs": "^1.3.3",
+    "debug": "~2.1.0",
+    "timezone": "~0.0.38",
+    "csv": "~0.4.2"
+  },
+  "devDependencies": {
+    "coffee-script": "^1.8.0",
+    "grunt": "^0.4.5",
+    "grunt-cli": "^0.1.13",
+    "grunt-contrib-coffee": "^0.12.0"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prepublish": "grunt"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/StreamMachine/sm-topline-stats.git"
+  },
+  "keywords": [
+    "streammachine"
+  ],
+  "author": "Eric Richardson <e@ewr.is>",
+  "license": "BSD",
+  "bugs": {
+    "url": "https://github.com/StreamMachine/sm-topline-stats/issues"
+  },
+  "homepage": "https://github.com/StreamMachine/sm-topline-stats",
+  "bin": {
+    "sm-topline-stats": "./runner-cmd"
+  }
+}
