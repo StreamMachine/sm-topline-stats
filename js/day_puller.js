@@ -24,7 +24,9 @@ module.exports = DayPuller = (function(_super) {
     this.query = q ? {
       query_string: {
         query: q,
-        default_operator: "AND"
+        default_operator: "AND",
+        analyze_wildcard: true,
+        lowercase_expanded_terms: false
       }
     } : {
       match_all: {}

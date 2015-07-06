@@ -46,8 +46,7 @@ argv = require("yargs").options({
     "default": "sessions,cume,tlh"
   },
   query: {
-    describe: "Elasticsearch query",
-    "default": null
+    describe: "Elasticsearch query"
   }
 }).argv;
 

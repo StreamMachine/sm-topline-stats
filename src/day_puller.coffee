@@ -9,6 +9,8 @@ module.exports = class DayPuller extends require("stream").Transform
             query_string:
                 query: q
                 default_operator: "AND"
+                analyze_wildcard: true
+                lowercase_expanded_terms: false
         else
             match_all: {}
 
