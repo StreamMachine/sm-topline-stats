@@ -28,7 +28,7 @@
     "streammachine"
   ],
   "author": "Eric Richardson <e@ewr.is>",
-  "license": "BSD",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/StreamMachine/sm-topline-stats/issues"
   },
