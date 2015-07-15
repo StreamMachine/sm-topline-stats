@@ -1,4 +1,4 @@
-var DayPuller, debug, tz,
+var Puller, debug, tz,
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
   __slice = [].slice;
@@ -7,23 +7,21 @@ tz = require("timezone");
 
 debug = require("debug")("sm-topline");
 
-module.exports = DayPuller = (function(_super) {
-  __extends(DayPuller, _super);
+module.exports = Puller = (function(_super) {
+  __extends(Puller, _super);
 
-  function DayPuller(es, zone, z, prefix, index, q, metrics) {
+  function Puller(opts) {
     var k, v, _ref;
-    this.es = es;
-    this.zone = zone;
-    this.z = z;
-    this.prefix = prefix;
-    this.index = index;
-    this.metrics = metrics;
-    DayPuller.__super__.constructor.call(this, {
+    this.opts = opts;
+    this.es = this.opts.es;
+    this.z = this.opts.zone;
+    this.zone = this.opts.zone !== "UTC" ? tz(require("timezone/" + this.opts.zone)) : tz;
+    Puller.__super__.constructor.call(this, {
       objectMode: true
     });
-    this.query = q ? {
+    this.query = this.opts.q ? {
       query_string: {
-        query: q,
+        query: this.opts.q,
         default_operator: "AND",
         analyze_wildcard: true,
         lowercase_expanded_terms: false
@@ -32,30 +30,33 @@ module.exports = DayPuller = (function(_super) {
       match_all: {}
     };
     this.aggs = {};
-    _ref = this.metrics;
+    _ref = this.opts.metrics;
     for (k in _ref) {
       v = _ref[k];
       this.aggs[k] = v.agg;
     }
   }
 
-  DayPuller.prototype._transform = function(date, encoding, cb) {
-    var body, filters, indices, tomorrow;
+  Puller.prototype._transform = function(date, encoding, cb) {
+    var body, date_end, filters, indices;
     debug("Running " + (this.zone(date, this.z, "%Y.%m.%d")));
-    tomorrow = tz(date, "+1 day");
-    indices = ["" + this.prefix + "-" + this.index + "-" + (this.zone(date, this.z, "%Y-%m-%d")), "" + this.prefix + "-" + this.index + "-" + (this.zone(tomorrow, this.z, "%Y-%m-%d"))];
+    date_end = tz(date, this.opts.interval.tz);
+    indices = ["" + this.opts.prefix + "-" + this.opts.index + "-" + (this.zone(date, this.z, "%Y-%m-%d")), "" + this.opts.prefix + "-" + this.opts.index + "-" + (this.zone(date_end, this.z, "%Y-%m-%d"))];
+    if (indices[0] === indices[1]) {
+      indices = indices[0];
+    }
     debug("Indices is ", indices);
     filters = [
       {
         range: {
           "time": {
             gte: tz(date, "%Y-%m-%dT%H:%M:%S.%3N%z"),
-            lt: tz(tomorrow, "%Y-%m-%dT%H:%M:%S.%3N%z")
+            lt: tz(date_end, "%Y-%m-%dT%H:%M:%S.%3N%z")
           }
         }
       }
     ];
-    filters.push(this.index === "listens" ? {
+    filters.push(this.opts.index === "listens" ? {
       range: {
         session_duration: {
           gte: 60
@@ -97,7 +98,7 @@ module.exports = DayPuller = (function(_super) {
             _results = [];
             for (idx in _ref) {
               v = _ref[idx];
-              _results.push((typeof (_base = this.metrics[idx]).clean === "function" ? _base.clean(v) : void 0) || v);
+              _results.push((typeof (_base = this.opts.metrics[idx]).clean === "function" ? _base.clean(v) : void 0) || v);
             }
             return _results;
           }).call(_this)));
@@ -108,8 +109,8 @@ module.exports = DayPuller = (function(_super) {
     })(this));
   };
 
-  return DayPuller;
+  return Puller;
 
 })(require("stream").Transform);
 
-//# sourceMappingURL=day_puller.js.map
+//# sourceMappingURL=puller.js.map

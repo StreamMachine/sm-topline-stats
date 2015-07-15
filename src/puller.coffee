@@ -1,13 +1,20 @@
 tz = require "timezone"
 debug = require("debug")("sm-topline")
 
-module.exports = class DayPuller extends require("stream").Transform
-    constructor: (@es,@zone,@z,@prefix,@index,q,@metrics)->
+module.exports = class Puller extends require("stream").Transform
+    constructor: (@opts) ->
+        @es = @opts.es
+        @z = @opts.zone
+        @zone = if @opts.zone != "UTC"
+            tz(require("timezone/#{@opts.zone}"))
+        else
+            tz
+
         super objectMode:true
 
-        @query = if q
+        @query = if @opts.q
             query_string:
-                query: q
+                query: @opts.q
                 default_operator: "AND"
                 analyze_wildcard: true
                 lowercase_expanded_terms: false
@@ -16,7 +23,7 @@ module.exports = class DayPuller extends require("stream").Transform
 
 
         @aggs = {}
-        for k,v of @metrics
+        for k,v of @opts.metrics
           @aggs[k] = v.agg
 
     _transform: (date,encoding,cb) ->
@@ -25,12 +32,14 @@ module.exports = class DayPuller extends require("stream").Transform
         # Since our logstash data is stored in indices named via UTC, we
         # always want to our date + the next date
 
-        tomorrow = tz(date,"+1 day")
+        date_end = tz(date,@opts.interval.tz)
 
         indices = [
-            "#{@prefix}-#{@index}-#{@zone(date,@z,"%Y-%m-%d")}",
-            "#{@prefix}-#{@index}-#{@zone(tomorrow,@z,"%Y-%m-%d")}"
+            "#{@opts.prefix}-#{@opts.index}-#{@zone(date,@z,"%Y-%m-%d")}",
+            "#{@opts.prefix}-#{@opts.index}-#{@zone(date_end,@z,"%Y-%m-%d")}"
         ]
+
+        indices = indices[0] if indices[0] == indices[1]
 
         debug "Indices is ", indices
 
@@ -38,10 +47,10 @@ module.exports = class DayPuller extends require("stream").Transform
             range:
                 "time":
                     gte:    tz(date,"%Y-%m-%dT%H:%M:%S.%3N%z")
-                    lt:     tz(tomorrow,"%Y-%m-%dT%H:%M:%S.%3N%z")
+                    lt:     tz(date_end,"%Y-%m-%dT%H:%M:%S.%3N%z")
         ]
 
-        filters.push if @index == "listens"
+        filters.push if @opts.index == "listens"
             range: { session_duration: { gte: 60 }}
         else
             range: { duration: { gte: 60 }}
@@ -64,7 +73,7 @@ module.exports = class DayPuller extends require("stream").Transform
 
             debug "Results is ", results
 
-            day_metrics = [date,( @metrics[idx].clean?(v) || v for idx,v of results.aggregations)...]
+            day_metrics = [date,( @opts.metrics[idx].clean?(v) || v for idx,v of results.aggregations)...]
 
             debug "Day metrics is ", day_metrics
 

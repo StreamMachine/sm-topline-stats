@@ -3,8 +3,8 @@ ES      = require "elasticsearch"
 tz      = require "timezone"
 CSV     = require "csv"
 
-DayPuller   = require "./day_puller"
-Metrics     = require "./metrics"
+Puller  = require "./puller"
+Metrics = require "./metrics"
 
 argv = require("yargs")
     .options
@@ -34,7 +34,18 @@ argv = require("yargs")
             default:        "sessions,cume,tlh"
         query:
             describe:       "Elasticsearch query"
+        interval:
+            describe:       "Interval: daily or hourly"
+            default:        "daily"
     .argv
+
+INTERVALS =
+    daily:
+        tz:     "+1 day"
+        format: "%Y-%m-%d"
+    hourly:
+        tz:     "+1 hour"
+        format: "%Y-%m-%d %H:00:00"
 
 if argv.zone != "UTC"
     zone = tz(require("timezone/#{argv.zone}"))
@@ -47,6 +58,12 @@ start_date  = zone(argv.start,argv.zone)
 end_date    = zone(argv.end,argv.zone)
 
 console.error "Stats: #{ start_date } - #{ end_date }"
+
+if INTERVALS[ argv.interval ]
+    interval = INTERVALS[ argv.interval ]
+else
+    console.error "Invalid interval: #{argv.interval}"
+    process.exit(1)
 
 # -- What metrics do we want? -- #
 
@@ -69,16 +86,24 @@ csv.pipe(process.stdout)
 csv.write ["Date",( m.name for m in metrics )...]
 
 transform = CSV.transform (data) ->
-    data[0] = zone(data[0],argv.zone,"%Y-%m-%d")
+    data[0] = zone(data[0],argv.zone,interval.format)
     data
 
-puller  = new DayPuller es, zone, argv.zone, argv.prefix, argv.index, argv.query, metrics
+puller  = new Puller
+    es:         es
+    zone:       argv.zone
+    prefix:     argv.prefix
+    index:      argv.index
+    q:          argv.query
+    metrics:    metrics
+    interval:   interval
+
 puller.pipe(transform).pipe(csv)
 
 ts = start_date
 loop
     puller.write(ts)
-    ts = tz(ts,"+1 day")
+    ts = tz(ts,interval.tz)
     break if ts >= end_date
 
 puller.end()
