@@ -103,7 +103,7 @@ puller.pipe(transform).pipe(csv)
 ts = start_date
 loop
     puller.write(ts)
-    ts = tz(ts,interval.tz)
+    ts = zone(ts,argv.zone,interval.tz)
     break if ts >= end_date
 
 puller.end()

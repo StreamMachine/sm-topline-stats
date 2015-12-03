@@ -136,7 +136,7 @@ ts = start_date;
 
 while (true) {
   puller.write(ts);
-  ts = tz(ts, interval.tz);
+  ts = zone(ts, argv.zone, interval.tz);
   if (ts >= end_date) {
     break;
   }
