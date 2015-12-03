@@ -24,3 +24,17 @@ module.exports =
                 precision_threshold: 1000
         clean: (obj) ->
             obj.value
+
+    atsl:
+        name: "ATSL"
+        reqs: ["tlh","sessions"]
+        rollup: (obj) ->
+            obj.tlh / obj.sessions
+
+    xconnected:
+        name: "Session Duration"
+        agg:
+            sum:
+                field: "connected"
+        clean: (obj) ->
+            obj.value / 3600

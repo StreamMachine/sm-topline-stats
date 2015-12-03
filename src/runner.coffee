@@ -73,7 +73,9 @@ for k in argv.metrics.split(",")
     clean_k = k.toLowerCase().replace(/\s/g,'')
 
     if Metrics[clean_k]
-        metrics.push Metrics[clean_k]
+        m = Metrics[clean_k]
+        m.key = clean_k
+        metrics.push m
     else
         throw "Invalid metric: #{k}"
 

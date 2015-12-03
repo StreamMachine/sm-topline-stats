@@ -11,7 +11,7 @@ module.exports = Puller = (function(_super) {
   __extends(Puller, _super);
 
   function Puller(opts) {
-    var k, v, _ref;
+    var v, _i, _len, _ref;
     this.opts = opts;
     this.es = this.opts.es;
     this.z = this.opts.zone;
@@ -29,11 +29,16 @@ module.exports = Puller = (function(_super) {
     } : {
       match_all: {}
     };
+    debug("Passed in metrics is ", this.opts.metrics);
     this.aggs = {};
+    this.rollups = {};
     _ref = this.opts.metrics;
-    for (k in _ref) {
-      v = _ref[k];
-      this.aggs[k] = v.agg;
+    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+      v = _ref[_i];
+      this.aggs[v.key] = v.agg;
+      if (v.rollup != null) {
+        this.rollups[v.key] = v.rollup;
+      }
     }
   }
 
@@ -87,18 +92,31 @@ module.exports = Puller = (function(_super) {
       body: body
     }, (function(_this) {
       return function(err, results) {
-        var day_metrics, idx, v;
+        var day_metrics, f, k, m, metrics, v, _i, _len, _ref, _ref1;
         if (err) {
           throw err;
         }
         debug("Results is ", results);
+        metrics = {};
+        _ref = _this.opts.metrics;
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          m = _ref[_i];
+          v = results.aggregations[m.key];
+          metrics[m.key] = (typeof m.clean === "function" ? m.clean(v) : void 0) || v;
+        }
+        _ref1 = _this.rollups;
+        for (k in _ref1) {
+          f = _ref1[k];
+          metrics[k] = f(metrics);
+        }
+        debug("Metrics is ", metrics);
         day_metrics = [date].concat(__slice.call((function() {
-            var _base, _ref, _results;
-            _ref = results.aggregations;
+            var _j, _len1, _ref2, _results;
+            _ref2 = this.opts.metrics;
             _results = [];
-            for (idx in _ref) {
-              v = _ref[idx];
-              _results.push((typeof (_base = this.opts.metrics[idx]).clean === "function" ? _base.clean(v) : void 0) || v);
+            for (_j = 0, _len1 = _ref2.length; _j < _len1; _j++) {
+              m = _ref2[_j];
+              _results.push(metrics[m.key]);
             }
             return _results;
           }).call(_this)));

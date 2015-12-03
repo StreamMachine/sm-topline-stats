@@ -33,6 +33,24 @@ module.exports = {
     clean: function(obj) {
       return obj.value;
     }
+  },
+  atsl: {
+    name: "ATSL",
+    reqs: ["tlh", "sessions"],
+    rollup: function(obj) {
+      return obj.tlh / obj.sessions;
+    }
+  },
+  xconnected: {
+    name: "Session Duration",
+    agg: {
+      sum: {
+        field: "connected"
+      }
+    },
+    clean: function(obj) {
+      return obj.value / 3600;
+    }
   }
 };
 

@@ -21,10 +21,13 @@ module.exports = class Puller extends require("stream").Transform
         else
             match_all: {}
 
+        debug "Passed in metrics is ", @opts.metrics
 
         @aggs = {}
-        for k,v of @opts.metrics
-          @aggs[k] = v.agg
+        @rollups = {}
+        for v in @opts.metrics
+            @aggs[v.key] = v.agg
+            @rollups[v.key] = v.rollup if v.rollup?
 
     _transform: (date,encoding,cb) ->
         debug "Running #{@zone(date,@z,"%Y.%m.%d")}"
@@ -73,7 +76,18 @@ module.exports = class Puller extends require("stream").Transform
 
             debug "Results is ", results
 
-            day_metrics = [date,( @opts.metrics[idx].clean?(v) || v for idx,v of results.aggregations)...]
+            metrics = {}
+            for m in @opts.metrics
+                v = results.aggregations[m.key]
+                metrics[m.key] = m.clean?(v) || v
+
+            # are there any rollup metrics?
+            metrics[k] = f(metrics) for k,f of @rollups
+
+            debug "Metrics is ", metrics
+            day_metrics = [date,(metrics[m.key] for m in @opts.metrics)...]
+            #day_metrics = [date,( @opts.metrics[idx].clean?(v) || v for idx,v of results.aggregations)...]
+
 
             debug "Day metrics is ", day_metrics
 
