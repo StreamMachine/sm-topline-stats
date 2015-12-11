@@ -49,7 +49,7 @@ argv = require("yargs").options({
     describe: "Elasticsearch query"
   },
   interval: {
-    describe: "Interval: daily or hourly",
+    describe: "Interval: daily, hourly or monthly",
     "default": "daily"
   }
 }).argv;
@@ -62,6 +62,10 @@ INTERVALS = {
   hourly: {
     tz: "+1 hour",
     format: "%Y-%m-%d %H:00:00"
+  },
+  monthly: {
+    tz: "+1 month",
+    format: "%Y-%m"
   }
 };
 

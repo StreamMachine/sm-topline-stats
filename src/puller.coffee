@@ -35,12 +35,16 @@ module.exports = class Puller extends require("stream").Transform
         # Since our logstash data is stored in indices named via UTC, we
         # always want to our date + the next date
 
-        date_end = tz(date,@opts.interval.tz)
+        date_end = @zone(date,@z,@opts.interval.tz)
 
-        indices = [
-            "#{@opts.prefix}-#{@opts.index}-#{@zone(date,@z,"%Y-%m-%d")}",
-            "#{@opts.prefix}-#{@opts.index}-#{@zone(date_end,@z,"%Y-%m-%d")}"
-        ]
+        # get all indices (inclusive) between date and date_end
+        indices = []
+        ts = date
+
+        loop
+            indices.push("#{@opts.prefix}-#{@opts.index}-#{@zone(ts,@z,"%Y-%m-%d")}")
+            ts = @zone(ts,@z,"+1 day")
+            break if ts > date_end
 
         indices = indices[0] if indices[0] == indices[1]
 

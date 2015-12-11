@@ -43,10 +43,18 @@ module.exports = Puller = (function(_super) {
   }
 
   Puller.prototype._transform = function(date, encoding, cb) {
-    var body, date_end, filters, indices;
+    var body, date_end, filters, indices, ts;
     debug("Running " + (this.zone(date, this.z, "%Y.%m.%d")));
-    date_end = tz(date, this.opts.interval.tz);
-    indices = ["" + this.opts.prefix + "-" + this.opts.index + "-" + (this.zone(date, this.z, "%Y-%m-%d")), "" + this.opts.prefix + "-" + this.opts.index + "-" + (this.zone(date_end, this.z, "%Y-%m-%d"))];
+    date_end = this.zone(date, this.z, this.opts.interval.tz);
+    indices = [];
+    ts = date;
+    while (true) {
+      indices.push("" + this.opts.prefix + "-" + this.opts.index + "-" + (this.zone(ts, this.z, "%Y-%m-%d")));
+      ts = this.zone(ts, this.z, "+1 day");
+      if (ts > date_end) {
+        break;
+      }
+    }
     if (indices[0] === indices[1]) {
       indices = indices[0];
     }
