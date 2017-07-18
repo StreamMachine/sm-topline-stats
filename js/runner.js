@@ -1,4 +1,4 @@
-var CSV, ES, INTERVALS, Metrics, Puller, argv, clean_k, csv, debug, end_date, es, interval, k, m, metrics, puller, start_date, transform, ts, tz, zone, _i, _len, _ref,
+var CSV, ES, INTERVALS, Metrics, Puller, argv, clean_k, csv, debug, end_date, es, interval, k, m, metrics, moment, puller, start_date, transform, ts, tz, zone, _i, _len, _ref,
   __slice = [].slice;
 
 debug = require("debug")("sm-topline");
@@ -8,6 +8,8 @@ ES = require("elasticsearch");
 tz = require("timezone");
 
 CSV = require("csv");
+
+moment = require("moment");
 
 Puller = require("./puller");
 
@@ -21,13 +23,15 @@ argv = require("yargs").options({
   },
   start: {
     describe: "Start Date",
-    demand: true,
-    requiresArg: true
+    demand: false,
+    requiresArg: false,
+    "default": new moment().subtract(30, 'days').hour(0).minute(0)
   },
   end: {
     describe: "End Date",
-    demand: true,
-    requiresArg: true
+    demand: false,
+    requiresArg: false,
+    "default": new moment().hour(0).minute(0)
   },
   zone: {
     describe: "Timezone for dates",

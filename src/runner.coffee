@@ -2,6 +2,7 @@ debug   = require("debug")("sm-topline")
 ES      = require "elasticsearch"
 tz      = require "timezone"
 CSV     = require "csv"
+moment  = require "moment"
 
 Puller  = require "./puller"
 Metrics = require "./metrics"
@@ -14,12 +15,14 @@ argv = require("yargs")
             requiresArg:    true
         start:
             describe:       "Start Date"
-            demand:         true
-            requiresArg:    true
+            demand:         false
+            requiresArg:    false
+            default: new moment().subtract(30, 'days').hour(0).minute(0)
         end:
             describe:       "End Date"
-            demand:         true
-            requiresArg:    true
+            demand:         false
+            requiresArg:    false
+            default: new moment().hour(0).minute(0)
         zone:
             describe:       "Timezone for dates"
             default:        "UTC"

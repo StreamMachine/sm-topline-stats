@@ -4,11 +4,12 @@
   "description": "Generate top-line metrics from StreamMachine Analytics",
   "main": "index.js",
   "dependencies": {
-    "elasticsearch": "^8.1.0",
-    "yargs": "^3.9.0",
+    "csv": "~0.4.2",
     "debug": "~2.1.1",
+    "elasticsearch": "^8.1.0",
+    "moment": "^2.18.1",
     "timezone": "~0.0.48",
-    "csv": "~0.4.2"
+    "yargs": "^3.9.0"
   },
   "devDependencies": {
     "coffee-script": "^1.8.0",
