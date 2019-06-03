@@ -1,9 +1,9 @@
-var CSV, ES, INTERVALS, Metrics, Puller, argv, clean_k, csv, debug, end_date, es, interval, k, m, metrics, moment, puller, start_date, transform, ts, tz, zone, _i, _len, _ref,
+var CSV, INTERVALS, Metrics, Puller, argv, clean_k, csv, debug, elasticsearch, end_date, es, interval, k, m, metrics, moment, puller, start_date, transform, ts, tz, zone, _i, _len, _ref,
   __slice = [].slice;
 
 debug = require("debug")("sm-topline");
 
-ES = require("elasticsearch");
+elasticsearch = require("@elastic/elasticsearch");
 
 tz = require("timezone");
 
@@ -79,8 +79,9 @@ if (argv.zone !== "UTC") {
   zone = tz;
 }
 
-es = new ES.Client({
-  host: argv.server
+es = new elasticsearch.Client({
+  node: argv.server,
+  apiVersion: '1.7'
 });
 
 start_date = zone(argv.start, argv.zone);

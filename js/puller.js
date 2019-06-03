@@ -84,11 +84,8 @@ module.exports = Puller = (function(_super) {
     });
     body = {
       query: {
-        filtered: {
-          query: this.query,
-          filter: {
-            and: filters
-          }
+        bool: {
+          filter: filters
         }
       },
       size: 0,
@@ -102,34 +99,35 @@ module.exports = Puller = (function(_super) {
       return function(err, results) {
         var day_metrics, f, k, m, metrics, v, _i, _len, _ref, _ref1;
         if (err) {
-          throw err;
+          debug(err);
+        } else {
+          debug("Results is ", results);
+          metrics = {};
+          _ref = _this.opts.metrics;
+          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+            m = _ref[_i];
+            v = results.body.aggregations[m.key];
+            metrics[m.key] = (typeof m.clean === "function" ? m.clean(v) : void 0) || v;
+          }
+          _ref1 = _this.rollups;
+          for (k in _ref1) {
+            f = _ref1[k];
+            metrics[k] = f(metrics);
+          }
+          debug("Metrics is ", metrics);
+          day_metrics = [date].concat(__slice.call((function() {
+              var _j, _len1, _ref2, _results;
+              _ref2 = this.opts.metrics;
+              _results = [];
+              for (_j = 0, _len1 = _ref2.length; _j < _len1; _j++) {
+                m = _ref2[_j];
+                _results.push(metrics[m.key]);
+              }
+              return _results;
+            }).call(_this)));
+          debug("Day metrics is ", day_metrics);
+          _this.push(day_metrics);
         }
-        debug("Results is ", results);
-        metrics = {};
-        _ref = _this.opts.metrics;
-        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-          m = _ref[_i];
-          v = results.aggregations[m.key];
-          metrics[m.key] = (typeof m.clean === "function" ? m.clean(v) : void 0) || v;
-        }
-        _ref1 = _this.rollups;
-        for (k in _ref1) {
-          f = _ref1[k];
-          metrics[k] = f(metrics);
-        }
-        debug("Metrics is ", metrics);
-        day_metrics = [date].concat(__slice.call((function() {
-            var _j, _len1, _ref2, _results;
-            _ref2 = this.opts.metrics;
-            _results = [];
-            for (_j = 0, _len1 = _ref2.length; _j < _len1; _j++) {
-              m = _ref2[_j];
-              _results.push(metrics[m.key]);
-            }
-            return _results;
-          }).call(_this)));
-        debug("Day metrics is ", day_metrics);
-        _this.push(day_metrics);
         return cb();
       };
     })(this));
