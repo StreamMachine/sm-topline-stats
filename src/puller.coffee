@@ -65,10 +65,8 @@ module.exports = class Puller extends require("stream").Transform
 
         body =
             query:
-                filtered:
-                    query: @query
-                    filter:
-                        and:filters
+                bool:
+                    filter: filters
             size: 0
             aggs: @aggs
 
@@ -76,25 +74,23 @@ module.exports = class Puller extends require("stream").Transform
 
         @es.search index:indices, body:body, (err,results) =>
             if err
-                throw err
+                debug err
+            else
+                debug "Results is ", results
 
-            debug "Results is ", results
+                metrics = {}
+                for m in @opts.metrics
+                    v = results.body.aggregations[m.key]
+                    metrics[m.key] = m.clean?(v) || v
 
-            metrics = {}
-            for m in @opts.metrics
-                v = results.aggregations[m.key]
-                metrics[m.key] = m.clean?(v) || v
+                # are there any rollup metrics?
+                metrics[k] = f(metrics) for k,f of @rollups
 
-            # are there any rollup metrics?
-            metrics[k] = f(metrics) for k,f of @rollups
+                debug "Metrics is ", metrics
+                day_metrics = [date,(metrics[m.key] for m in @opts.metrics)...]
 
-            debug "Metrics is ", metrics
-            day_metrics = [date,(metrics[m.key] for m in @opts.metrics)...]
-            #day_metrics = [date,( @opts.metrics[idx].clean?(v) || v for idx,v of results.aggregations)...]
+                debug "Day metrics is ", day_metrics
 
-
-            debug "Day metrics is ", day_metrics
-
-            @push day_metrics
+                @push day_metrics
 
             cb()

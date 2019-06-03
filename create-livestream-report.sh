@@ -1,3 +1,3 @@
 #!/bin/sh
 
-./runner-cmd --server $ES_URL --prefix $ES_PREFIX --index sessions --metrics "tlh,cume" > $OUTPUT_FILE
+./runner-cmd --server $ES_URL --prefix $ES_PREFIX --index $ES_INDEX --metrics "tlh,cume" > $OUTPUT_FILE

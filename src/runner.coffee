@@ -1,5 +1,5 @@
 debug   = require("debug")("sm-topline")
-ES      = require "elasticsearch"
+elasticsearch      = require "@elastic/elasticsearch"
 tz      = require "timezone"
 CSV     = require "csv"
 moment  = require "moment"
@@ -58,7 +58,9 @@ if argv.zone != "UTC"
 else
     zone = tz
 
-es = new ES.Client host:argv.server
+es = new elasticsearch.Client
+    node: argv.server
+    apiVersion: '1.7'
 
 start_date  = zone(argv.start,argv.zone)
 end_date    = zone(argv.end,argv.zone)
